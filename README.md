@@ -2,7 +2,7 @@
 
 **Built in Pakistan, for every exporter in the Global South facing the EU's carbon border tax.**
 
-🔗 **Live demo:** _add Streamlit link here_
+🔗 **Live demo:** _https://carboncompass.streamlit.app/_
 🎥 **Demo video:** _add link here_
 📄 **Product Requirements Document:** [PRD.md](PRD.md)
 
