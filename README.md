@@ -1,121 +1,107 @@
-# CarbonPass — Agentic AI for CBAM-Ready Exporters
+# 🌍 CarbonPass — Agentic AI for CBAM-Ready Exporters
 
-**Hackathon:** HEC–NCEAC & PEC Generative & Agentic AI Training, Cohort 11 — Final Hackathon
+**Built in Pakistan, for every exporter in the Global South facing the EU's carbon border tax.**
+
+🔗 **Live demo:** _add Streamlit link here_
+🎥 **Demo video:** _add link here_
+📄 **Product Requirements Document:** [PRD.md](PRD.md)
+
+*HEC–NCEAC & PEC Generative & Agentic AI Training, Cohort 11 — Final Hackathon*
+
+---
 
 ## The problem
 
-Since 1 January 2026 the EU's Carbon Border Adjustment Mechanism (CBAM) is in its definitive phase. EU importers of steel, aluminium, cement, fertilisers, hydrogen and electricity must declare the embedded emissions of 2026 imports by 30 September 2027 and pay for them with CBAM certificates.
+Since 1 January 2026 the EU's **Carbon Border Adjustment Mechanism (CBAM)** is in its definitive phase. EU importers of steel, aluminium, cement, fertilisers, hydrogen and electricity must declare the embedded emissions of every 2026 import by 30 September 2027 and pay for them with CBAM certificates.
 
-EU buyers are now asking their suppliers in Pakistan and across the Global South for verifiable emissions data. Suppliers that can't provide it get EU default values applied, which raise costs and put contracts at risk. Most small and mid-sized exporters have no monitoring plan, no emissions data system, and can't afford consultants.
+So EU buyers are asking their suppliers **now** for verifiable emissions data. Suppliers who can't provide it get **EU default values** applied, which raise costs and put contracts at risk. Most small and mid-sized exporters have no monitoring plan, no emissions data system, and can't afford consultants.
 
-## The solution
+## What CarbonPass does
 
-CarbonPass is a multi-agent AI workflow. An exporter uploads its bills, production logs and existing documents, and receives:
+Upload your plant's existing documents (bills, production logs, purchase and meter registers, the buyer's request). In minutes, four AI agents give you:
 
-1. Its specific embedded emissions per product, calculated deterministically
-2. A gap analysis against a CBAM supplier-readiness checklist
-3. A prioritised action plan to get verification-ready
-4. A ready-to-send emissions communication for its EU buyer
-5. A "what-if" showing how much cost exposure falls when actual data replaces default values
+| Output | |
+|---|---|
+| 📊 **Embedded emissions per product** | Direct, indirect and precursor emissions in tCO2 per tonne |
+| ✅ **Readiness audit** | 20-item CBAM checklist rated Met / Partial / Missing, with evidence |
+| 🎯 **Readiness score + action plan** | What to fix first, who owns it, by when |
+| 🔁 **What-if** | How much cost exposure falls when actual supplier data replaces default values |
+| 📧 **Draft reply to the EU buyer** | Product emissions, route, data basis and open issues |
 
-**Pitch line:** Built in Pakistan, for every exporter in the Global South facing CBAM.
-
-## Architecture
+## How it works
 
 ```
-  Exporter uploads: bills, production logs, purchase register, meter register, EU buyer email
-                                        │
-                                ┌───────▼───────┐
-                                │ 1. INTAKE     │  parse PDF/DOCX/XLSX → chunks + vector DB
-                                └───────┬───────┘
-                                ┌───────▼───────┐
-                                │ ORCHESTRATOR  │  plans the run, routes tasks
-                                └─┬─────┬─────┬─┘
-            ┌─────────────────────┘     │     └─────────────────────┐
-   ┌────────▼─────────┐      ┌──────────▼─────────┐      ┌──────────▼─────────┐
-   │ 2. DATA EXTRACTOR│      │ 3. EMISSIONS CALC  │      │ 4. GAP AUDITOR     │
-   │ LLM → structured │ ───► │ calls Python tool  │      │ RAG vs checklist   │
-   │ JSON + citations │      │ cbam_calculator.py │      │ Met/Partial/Missing│
-   └──────────────────┘      └──────────┬─────────┘      └──────────┬─────────┘
-                                        └─────────────┬─────────────┘
-                                              ┌───────▼───────┐
-                                              │ 5. REPORTER   │  action plan, buyer
-                                              │ & ADVISOR     │  communication, what-if
-                                              └───────┬───────┘
-                                                      │
-                                     Human review (plant manager approves)
+ Plant documents ──► 1. DATA EXTRACTOR ──► 2. EMISSIONS CALCULATOR ──► 3. GAP AUDITOR ──► 4. REPORTER & ADVISOR
+                     LLM → structured       deterministic Python        LLM vs 20-item     LLM → action plan,
+                     JSON with citations    tool (no LLM maths)         checklist          buyer email, what-if
+                                                                                                   │
+                                                                              Human review (plant manager approves)
 ```
 
-| Agent | Job | Guardrail |
+| Agent | Job | Guardrail against hallucination |
 |---|---|---|
-| Intake | Parse and index all uploads | Keep file name and page for every chunk |
-| Data Extractor | Turn documents into `sample_installation_data.json` format | Every number cites its source document; unknowns marked `null` |
-| Emissions Calculator | Call `calculate()` and `what_if_supplier_data()` | The LLM never does arithmetic |
-| Gap Auditor | Rate each item in `cbam_checklist.json` | Must cite evidence or say "No evidence found" |
-| Reporter & Advisor | Action plan, buyer email, cost what-if | Every output marked "DRAFT – requires review"; figures labelled illustrative |
+| **Data Extractor** | Turns documents into structured plant data | Unknown values become `null`; every number cites its source |
+| **Emissions Calculator** | Computes emissions, flags data problems, estimates cost exposure | Pure Python; the LLM never does arithmetic |
+| **Gap Auditor** | Rates the plant against the checklist like a verifier | Must quote evidence or say "No evidence found"; cannot pass an item the calculator flagged |
+| **Reporter & Advisor** | Summary, action plan, what-if message, buyer email | May only use numbers the calculator produced; everything marked DRAFT |
 
-## Files in this starter kit
+The readiness score is computed in code, not by the LLM. Agents run in a fixed sequence so results are reproducible.
 
-| File | Purpose | Owner |
-|---|---|---|
-| `cbam_calculator.py` | Deterministic emissions + cost-exposure tool (tested) | Agent engineer |
-| `sample_installation_data.json` | Structured data for the fictional demo plant | Lead |
-| `cbam_checklist.json` | 20-item paraphrased CBAM readiness checklist | Lead |
-| `sample_dossier_margalla_steel.md` | Fictional plant's documents with deliberate gaps + answer key | Lead |
+## Demo: Margalla Steel Works (fictional)
 
-Run the calculator:
+A Sheikhupura mini-mill: an EAF melt shop makes billets, and a rolling mill makes rebar, also using 24,000 t of billets bought from a local induction-furnace mill. Its German buyer demands CBAM data by 31 October 2026.
+
+| Result | Value |
+|---|---|
+| Rebar direct embedded emissions | **0.704 tCO2/t** |
+| Readiness score | **38 / 100** (6 met, 4 partial, 10 missing) |
+| Key flags | No supplier data for purchased billets · gas meter calibration overdue |
+| Illustrative exposure, 15,000 t rebar to EU | **€792,000 → €454,500 (−43%)** with actual supplier data |
+
+## Run it
 
 ```bash
-python3 cbam_calculator.py sample_installation_data.json
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-## Demo story (3 minutes)
+With no API key, the app runs in **demo mode** with fixed sample outputs. For live AI, set these (or add them to Streamlit Cloud → Secrets):
 
-1. **The hook:** Show the German buyer's email: "Send your emissions data by 31 October or we use default values and review pricing."
-2. **Upload:** Drop in Margalla Steel's documents.
-3. **Agents work:** Show the orchestrator routing tasks live.
-4. **Results:** Rebar comes out at 0.704 tCO2/t direct emissions, with 6 gaps found, including an overdue gas meter and missing supplier data.
-5. **The wow moment:** What-if with real supplier data for the purchased billets: illustrative full-phase-in exposure on 15,000 t falls from **€792,000 to €454,500 (−43%)**.
-6. **Output:** An action plan and a draft emissions communication ready to send to the buyer.
+```toml
+LLM_API_KEY  = "gsk_..."
+LLM_BASE_URL = "https://api.groq.com/openai/v1"
+LLM_MODEL    = "llama-3.3-70b-versatile"
+```
 
-## Demo scope
+Any OpenAI-compatible endpoint works (Groq, OpenAI, Gemini).
 
-- **In:** one fictional steel plant, two processes (EAF billets → rebar), 20 checklist items, the buyer email, one what-if.
-- **Out (roadmap slide):** aluminium, cement and fertiliser routes; the official EU communication template format; Urdu interface; multi-plant dashboard; ISO 14064 corporate inventory; supplier data-collection portal.
+## Files
+
+| File | Purpose |
+|---|---|
+| `app.py` | Streamlit interface |
+| `pipeline.py` | Runs the four agents in sequence; demo mode |
+| `prompts.py` | System prompts for each agent |
+| `cbam_calculator.py` | Deterministic emissions and cost-exposure tool |
+| `cbam_checklist.json` | 20-item CBAM supplier-readiness checklist (paraphrased, editable) |
+| `sample_installation_data.json` | Structured data for the demo plant |
+| `sample_dossier_margalla_steel.md` | Demo plant's documents, with deliberate gaps and an answer key |
+| `PRD.md` | Product Requirements Document |
 
 ## Tech stack
 
-Use what the course taught. Default:
-- Agents: crewAI or LangGraph
-- LLM: Gemini or Groq free tier, with a backup key
-- RAG: LlamaIndex or LangChain with Chroma/FAISS
-- UI: Streamlit, deployed on Streamlit Cloud or Hugging Face Spaces
+Python · Streamlit · Groq (Llama 3.3 70B) via OpenAI-compatible API · pandas · pypdf · python-docx · openpyxl · Streamlit Cloud
 
-## Team roles
+## Roadmap
 
-| Role | Owns |
-|---|---|
-| Lead (Fahim) | Domain logic, checklist, sample data, pitch, judge Q&A |
-| Agent engineer | Orchestrator, agent prompts, tool calling to the calculator |
-| RAG engineer | Intake, vector DB, evidence retrieval with citations |
-| UI / report dev | Streamlit app, upload flow, results view, what-if slider, deployment |
-| QA + pitch (optional) | Test against the answer key, slides, demo video |
+Aluminium, cement and fertiliser routes · official EU communication template · Urdu interface · supplier data-collection portal · multi-plant dashboard · ISO 14064-1 corporate GHG inventory · verifier workspace
 
-## Timeline
+## Limitations
 
-| When | What | Done when |
-|---|---|---|
-| Sat 5–7 PM | Register, recruit, create repo, share this kit | Form submitted, 4+ members |
-| Sat 7–8 PM | Kickoff call, assign owners, share API keys | Everyone has a task |
-| Sat 8 PM–1 AM | Thin slice: upload → extractor → calculator → results in UI | One end-to-end run works |
-| Sun 9 AM–2 PM | Gap auditor, reporter, what-if, buyer email | Full run on Margalla Steel |
-| Sun 2–6 PM | Integration, deployment, test against answer key | Live URL works |
-| **Sun 7 PM** | **Feature freeze** | — |
-| Sun 7–10 PM | Bug fixes, demo video (backup), slides | Video + slides ready |
-| Sun 10–11 PM | Submit via edit link | Submitted |
+- All factors and cost figures are **illustrative**. Real CBAM reporting must follow the EU's official methodology, default values and benchmark-based free-allocation adjustments, which this prototype simplifies.
+- For iron and steel, only direct emissions are costed; indirect emissions are reported.
+- Outputs are drafts for expert review, not legal or compliance advice.
 
-## Honest caveats for judges
+## License
 
-- All factors and figures are **illustrative**. Real CBAM reporting uses the EU's official methodology, default values and benchmark-based free-allocation adjustments, which this prototype simplifies.
-- For iron and steel, the prototype prices only direct emissions; indirect emissions are reported but not costed.
-- Pakistan's direct CBAM exposure today is concentrated in a few sectors (mainly steel and aluminium). The same engine scales to exporters in India, Turkey, Egypt and beyond, and to ISO 14064 corporate GHG inventories that EU buyers increasingly request from all suppliers.
+MIT

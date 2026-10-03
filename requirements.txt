@@ -1,0 +1,6 @@
+streamlit>=1.46
+pandas
+openai>=1.30
+pypdf
+python-docx
+openpyxl

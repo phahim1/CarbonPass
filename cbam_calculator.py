@@ -21,9 +21,21 @@ CO2_PER_C = 44.0 / 12.0  # tCO2 per tonne of carbon
 GJ_PER_MMBTU = 1.055056
 
 
-def _fuel_emissions(fuels):
+DEFAULT_EF_NATURAL_GAS = 56.1  # tCO2/TJ, IPCC 2006 default
+
+
+def _fuel_emissions(fuels, flags=None):
     total, lines = 0.0, []
     for f in fuels:
+        if f.get("ef_tco2_per_tj") is None:
+            f["ef_tco2_per_tj"] = DEFAULT_EF_NATURAL_GAS
+            if flags is not None:
+                flags.append(f"[MEDIUM] No documented emission factor for '{f['name']}'. "
+                             f"IPCC default {DEFAULT_EF_NATURAL_GAS} tCO2/TJ used; document it in a factor register.")
+        if f.get("quantity") is None:
+            if flags is not None:
+                flags.append(f"[HIGH] Fuel quantity missing for '{f['name']}'.")
+            continue
         gj = f["quantity"] * (GJ_PER_MMBTU if f["unit"] == "MMBTU" else 1.0)
         t = gj / 1000.0 * f["ef_tco2_per_tj"]
         total += t
@@ -31,9 +43,14 @@ def _fuel_emissions(fuels):
     return total, lines
 
 
-def _process_emissions(carbon_inputs):
+def _process_emissions(carbon_inputs, flags=None):
     total, lines = 0.0, []
     for c in carbon_inputs:
+        if c.get("tonnes") is None or c.get("carbon_fraction") is None:
+            if flags is not None:
+                flags.append(f"[HIGH] Quantity or carbon content missing for '{c['name']}'; "
+                             f"process emissions from it are not counted.")
+            continue
         t = c["tonnes"] * c["carbon_fraction"] * CO2_PER_C
         total += t
         lines.append({"source": c["name"], "tCO2": round(t, 1)})
@@ -46,10 +63,10 @@ def calculate(data, ets_price_eur=75.0, cbam_factor=0.025):
     see_by_process = {}
 
     for proc in data["processes"]:
-        fuel_t, fuel_lines = _fuel_emissions(proc.get("fuels", []))
-        proc_t, proc_lines = _process_emissions(proc.get("carbon_inputs", []))
-        elec_mwh = proc.get("electricity_mwh", 0.0)
-        indirect = elec_mwh * data["grid_ef_tco2_per_mwh"]
+        fuel_t, fuel_lines = _fuel_emissions(proc.get("fuels", []), flags)
+        proc_t, proc_lines = _process_emissions(proc.get("carbon_inputs", []), flags)
+        elec_mwh = proc.get("electricity_mwh") or 0.0
+        indirect = elec_mwh * (data.get("grid_ef_tco2_per_mwh") or 0.0)
 
         prod = proc["output_tonnes"]
         direct_own = fuel_t + proc_t

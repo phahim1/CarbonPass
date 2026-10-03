@@ -94,9 +94,26 @@ def mock_llm(system, user):
                 {"priority": 3, "action": "Write a monitoring plan",
                  "why": "Required basis for verification", "owner": "QA Manager",
                  "by_when": "within 4 weeks"}],
-            "what_if_message": "DRAFT. See exposure figures above (illustrative).",
-            "buyer_email": {"subject": "DRAFT – CBAM emissions data for CN 7214 rebar",
-                            "body": "DRAFT – requires review before sending."}})
+            "what_if_message": "With actual emissions data from Supplier B instead of EU "
+                               "default values, illustrative full-phase-in exposure on 15,000 t "
+                               "of rebar falls from EUR 792,000 to EUR 454,500. Requesting "
+                               "supplier data is the single most valuable action.",
+            "buyer_email": {
+                "subject": "DRAFT – CBAM emissions data for CN 7214 rebar (Jan–Jun 2026)",
+                "body": "DRAFT – requires review before sending.\n\n"
+                        "Dear Procurement Team,\n\n"
+                        "Thank you for your request. Please find our preliminary CBAM data for "
+                        "deformed rebar (CN 7214) produced January–June 2026:\n\n"
+                        "- Production route: EAF billets from scrap, re-rolled; part of the "
+                        "billets purchased from a local induction-furnace mill\n"
+                        "- Specific direct embedded emissions: 0.704 tCO2/t\n"
+                        "- Specific indirect embedded emissions: 0.344 tCO2/t\n"
+                        "- Data basis: actual installation data; EU default values for "
+                        "24,000 t of purchased billets\n\n"
+                        "Open issues: we are obtaining actual emissions data from our billet "
+                        "supplier and recalibrating one gas meter. We will send updated, "
+                        "verification-ready figures by 31 October 2026.\n\n"
+                        "Kind regards,\nExport Department\nMargalla Steel Works (Pvt) Ltd"}})
     raise ValueError("Unknown agent prompt")
 
 
@@ -113,12 +130,13 @@ def readiness_score(audit):
 
 
 # ---------------------------------------------------------------- pipeline
-def run(documents_text, buyer_request="", supplier_whatif=None, llm=None):
+def run(documents_text, buyer_request="", supplier_whatif=None, llm=None, on_step=None):
     """
     documents_text : all uploaded documents as text (Intake/RAG output)
     supplier_whatif: {"process": ..., "precursor": ..., "see_direct": ...} or None
     """
     llm = llm or make_llm()[0]
+    step = on_step or (lambda name: None)
 
     with open(os.path.join(HERE, "sample_installation_data.json")) as f:
         schema = f.read()
@@ -126,10 +144,12 @@ def run(documents_text, buyer_request="", supplier_whatif=None, llm=None):
         checklist = f.read()
 
     # 1. Extract
+    step("Data Extractor: reading documents and extracting activity data")
     data = parse_json(llm(P.EXTRACTOR_SYSTEM,
                           P.EXTRACTOR_USER.format(schema=schema, documents=documents_text)))
 
     # 2. Calculate (deterministic)
+    step("Emissions Calculator: computing embedded emissions per product")
     result = calc.calculate(data)
     whatif = None
     if supplier_whatif:
@@ -138,11 +158,13 @@ def run(documents_text, buyer_request="", supplier_whatif=None, llm=None):
                                             supplier_whatif["see_direct"])
 
     # 3. Audit
+    step("Gap Auditor: checking readiness against the CBAM checklist")
     audit = parse_json(llm(P.AUDITOR_SYSTEM, P.AUDITOR_USER.format(
         checklist=checklist, flags="\n".join(result["flags"]), documents=documents_text)))
     score = readiness_score(audit)
 
     # 4. Report
+    step("Reporter & Advisor: writing action plan and buyer email")
     report = parse_json(llm(P.REPORTER_SYSTEM, P.REPORTER_USER.format(
         installation=result["installation"], period=result["reporting_period"],
         results=json.dumps(result["results"], indent=1),
