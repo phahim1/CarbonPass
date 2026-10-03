@@ -1,0 +1,26 @@
+{
+  "_note": "Paraphrased CBAM supplier-readiness checklist written for this project. Not the legal text. Based on the structure of Regulation (EU) 2023/956, its implementing rules, and ISO 14064-1 style GHG inventory practice. Verify against official EU guidance before real use.",
+  "version": "0.1-hackathon",
+  "items": [
+    {"id": "ID-01", "area": "Installation identity", "requirement": "Installation is uniquely identified: legal name, address, geo-coordinates, operator contact.", "evidence_expected": "Company profile or monitoring plan cover page", "severity": "medium"},
+    {"id": "ID-02", "area": "Goods in scope", "requirement": "Each product exported to the EU is mapped to its CN code and CBAM goods category.", "evidence_expected": "Product list with CN codes", "severity": "high"},
+    {"id": "BD-01", "area": "System boundaries", "requirement": "Production processes and their boundaries are defined, with every emission source and source stream assigned to a process.", "evidence_expected": "Process flow diagram and source-stream list", "severity": "high"},
+    {"id": "BD-02", "area": "Production route", "requirement": "The production route for each product is stated (e.g. EAF from scrap, induction furnace, re-rolling of purchased billets).", "evidence_expected": "Monitoring plan section on production routes", "severity": "medium"},
+    {"id": "MP-01", "area": "Monitoring plan", "requirement": "A documented monitoring methodology exists describing how activity data and factors are obtained for each source stream.", "evidence_expected": "Monitoring plan document", "severity": "high"},
+    {"id": "AD-01", "area": "Activity data", "requirement": "Fuel consumption is recorded per process from metered or invoiced data for the full reporting period.", "evidence_expected": "Gas bills (MMBTU), fuel logs", "severity": "high"},
+    {"id": "AD-02", "area": "Activity data", "requirement": "Carbon-containing inputs (electrodes, coal, carbon additives) are recorded with quantities and carbon content.", "evidence_expected": "Store issue records, lab or supplier carbon analysis", "severity": "high"},
+    {"id": "AD-03", "area": "Activity data", "requirement": "Electricity consumption is recorded per process, separating grid and on-site generation.", "evidence_expected": "Electricity bills, sub-meter readings", "severity": "medium"},
+    {"id": "AD-04", "area": "Activity data", "requirement": "Production output per product is recorded for the same period as emissions data.", "evidence_expected": "Production logs, dispatch records", "severity": "high"},
+    {"id": "EF-01", "area": "Emission factors", "requirement": "Emission factors and net calorific values are documented with their source (default or measured) and justification.", "evidence_expected": "Factor register", "severity": "high"},
+    {"id": "EF-02", "area": "Emission factors", "requirement": "The electricity emission factor used is documented with its source and basis.", "evidence_expected": "Factor register, grid factor reference", "severity": "medium"},
+    {"id": "ME-01", "area": "Measurement & calibration", "requirement": "All meters used for activity data are listed, calibrated within interval, and traceable.", "evidence_expected": "Meter register, calibration certificates", "severity": "high"},
+    {"id": "ME-02", "area": "Measurement & calibration", "requirement": "Measurement uncertainty of key activity data is estimated.", "evidence_expected": "Uncertainty assessment", "severity": "medium"},
+    {"id": "PR-01", "area": "Precursors", "requirement": "Purchased precursors (e.g. billets) are identified by supplier, quantity and route.", "evidence_expected": "Purchase records", "severity": "high"},
+    {"id": "PR-02", "area": "Precursors", "requirement": "Actual embedded emissions data is obtained from each precursor supplier, or the use of default values is documented.", "evidence_expected": "Supplier emissions communications", "severity": "high"},
+    {"id": "CP-01", "area": "Carbon price", "requirement": "Any carbon price effectively paid in the country of origin is documented with evidence.", "evidence_expected": "Tax or ETS payment records, or a statement of none", "severity": "low"},
+    {"id": "QA-01", "area": "Data quality & control", "requirement": "Data flow, control activities, and responsibilities are documented, including how gaps are filled.", "evidence_expected": "Data management procedure", "severity": "medium"},
+    {"id": "QA-02", "area": "Data quality & control", "requirement": "Records are retained for the required period and are retrievable for verification.", "evidence_expected": "Records retention procedure", "severity": "medium"},
+    {"id": "VR-01", "area": "Verification readiness", "requirement": "The installation has planned verification of its emissions data by an accredited verifier before EU customers' declaration deadline.", "evidence_expected": "Verifier engagement plan", "severity": "high"},
+    {"id": "CM-01", "area": "Customer communication", "requirement": "Specific embedded emissions per product are reported to EU importers in a structured format.", "evidence_expected": "Completed emissions communication to EU buyer", "severity": "high"}
+  ]
+}

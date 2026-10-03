@@ -1,0 +1,43 @@
+{
+  "_note": "FICTIONAL company and ILLUSTRATIVE factors for hackathon demo only.",
+  "installation": "Margalla Steel Works (Pvt) Ltd - Sheikhupura, Pakistan (fictional)",
+  "reporting_period": "2026-01-01 to 2026-06-30",
+  "grid_ef_tco2_per_mwh": 0.45,
+  "carbon_price_paid_eur_per_t": 0,
+  "processes": [
+    {
+      "name": "EAF Melt Shop - Billets",
+      "cn_code": "7207",
+      "output_tonnes": 60000,
+      "electricity_mwh": 33000,
+      "fuels": [
+        {"name": "Natural gas (ladle preheating)", "quantity": 40000, "unit": "MMBTU", "ef_tco2_per_tj": 56.1}
+      ],
+      "carbon_inputs": [
+        {"name": "Graphite electrodes", "tonnes": 120, "carbon_fraction": 0.99},
+        {"name": "Injection coal", "tonnes": 600, "carbon_fraction": 0.85}
+      ]
+    },
+    {
+      "name": "Rolling Mill - Rebar",
+      "cn_code": "7214",
+      "output_tonnes": 80000,
+      "electricity_mwh": 8000,
+      "fuels": [
+        {"name": "Natural gas (reheating furnace)", "quantity": 105000, "unit": "MMBTU", "ef_tco2_per_tj": 56.1}
+      ],
+      "precursors": [
+        {"name": "Billets (own)", "source": "own", "process": "EAF Melt Shop - Billets", "tonnes": 58000},
+        {"name": "Billets (purchased)", "source": "purchased", "supplier": "Supplier B - local induction furnace",
+         "tonnes": 24000, "supplier_see_direct": null, "default_see_direct": 1.9, "default_see_indirect": 0.4}
+      ]
+    }
+  ],
+  "meters": [
+    {"id": "EM-01", "measures": "Grid electricity, melt shop", "calibration_status": "valid"},
+    {"id": "GM-02", "measures": "Natural gas, reheating furnace", "calibration_status": "overdue since 2026-03"}
+  ],
+  "eu_exports": [
+    {"process": "Rolling Mill - Rebar", "tonnes": 15000}
+  ]
+}
