@@ -1,8 +1,6 @@
 # CarbonPass — Agentic AI for CBAM-Ready Exporters
 
 **Hackathon:** HEC–NCEAC & PEC Generative & Agentic AI Training, Cohort 11 — Final Hackathon
-**Team lead:** Engr. Fahimullah Khanzada, PE
-**Deadline:** Sunday 4 October 2026, 11:59 PM PKT
 
 ## The problem
 
