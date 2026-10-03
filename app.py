@@ -86,7 +86,7 @@ with st.sidebar:
         st.warning("**Demo mode**: no API key set. The agents return fixed outputs for the "
                    "sample plant. Add `LLM_API_KEY` in Secrets for live AI.")
     else:
-        st.success(f"**Live AI**: {mode}")
+        st.success(f"**Live AI**: {getattr(llm, 'state', {}).get('model', mode)}")
 
     st.header("📂 Plant documents")
     source = st.radio("Input", ["Use demo plant (Margalla Steel, fictional)", "Upload my documents"])

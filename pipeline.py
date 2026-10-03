@@ -33,28 +33,43 @@ def make_llm():
     client = OpenAI(api_key=key, base_url=os.environ.get("LLM_BASE_URL"))
     model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
+    fallbacks = [model] + [m for m in ("openai/gpt-oss-120b", "llama-3.3-70b-versatile",
+                                       "openai/gpt-oss-20b", "llama-3.1-8b-instant") if m != model]
+    state = {"model": model, "json_mode": True}
+
     def real_llm(system, user):
         import time
         last = None
-        for attempt in range(4):
+        tried = set()
+        for attempt in range(8):
+            kwargs = dict(model=state["model"], temperature=0,
+                          messages=[{"role": "system", "content": system},
+                                    {"role": "user", "content": user}])
+            if state["json_mode"]:
+                kwargs["response_format"] = {"type": "json_object"}
             try:
-                r = client.chat.completions.create(
-                    model=model,
-                    temperature=0,
-                    response_format={"type": "json_object"},
-                    messages=[{"role": "system", "content": system},
-                              {"role": "user", "content": user}],
-                )
+                r = client.chat.completions.create(**kwargs)
                 return r.choices[0].message.content
-            except Exception as e:  # rate limit or transient error: wait and retry
+            except Exception as e:
                 last = e
                 msg = str(e).lower()
+                if "model_not_found" in msg or "does not exist" in msg or "decommissioned" in msg:
+                    tried.add(state["model"])
+                    nxt = next((m for m in fallbacks if m not in tried), None)
+                    if not nxt:
+                        raise
+                    state["model"] = nxt          # switch model and retry
+                    continue
+                if "response_format" in msg or "json_validate_failed" in msg:
+                    state["json_mode"] = False    # model rejects JSON mode: retry without
+                    continue
                 if "rate" in msg or "429" in msg or "timeout" in msg or "503" in msg:
                     time.sleep(15 * (attempt + 1))
                     continue
                 raise
         raise last
 
+    real_llm.state = state
     return real_llm, model
 
 
