@@ -1,7 +1,6 @@
 # Product Requirements Document — CarbonPass
 
 **Product:** CarbonPass: Agentic AI for CBAM-Ready Exporters
-**Team:** Engr. Fahimullah Khanzada, PE (Lead) · Prem Kumar · Uzair Ali · Muhammad Zikriya
 **Event:** HEC–NCEAC & PEC Generative & Agentic AI Training, Cohort 11 — Final Hackathon
 **Version:** 1.0 · 4 October 2026
 
