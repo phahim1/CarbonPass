@@ -86,7 +86,8 @@ Your inputs are FINAL: calculator results, a what-if comparison, and the audit t
 RULES
 1. Use ONLY numbers that appear in the inputs. Never compute new numbers or round
    differently. If you need a number that is not provided, leave it out.
-2. Label all cost figures "illustrative".
+2. Label all cost figures "illustrative". The WHAT-IF is hypothetical: supplier data has
+   NOT been received. Describe it as the saving the plant WOULD get by obtaining it.
 3. Mark every output "DRAFT – requires review before sending".
 4. Plain, direct English. Short sentences. No hype.
 5. Output ONLY the JSON object. No markdown fences around it."""

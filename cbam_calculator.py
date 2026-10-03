@@ -43,14 +43,27 @@ def _fuel_emissions(fuels, flags=None):
     return total, lines
 
 
+# Conservative carbon-content defaults (illustrative) used ONLY when the plant has no
+# documented value. Gaps are filled conservatively, never with zero.
+CONSERVATIVE_CARBON = {"electrode": 1.0, "graphite": 1.0, "coal": 0.90, "coke": 0.90,
+                       "anthracite": 0.92}
+
+
 def _process_emissions(carbon_inputs, flags=None):
     total, lines = 0.0, []
     for c in carbon_inputs:
-        if c.get("tonnes") is None or c.get("carbon_fraction") is None:
+        if c.get("tonnes") is None:
             if flags is not None:
-                flags.append(f"[HIGH] Quantity or carbon content missing for '{c['name']}'; "
-                             f"process emissions from it are not counted.")
+                flags.append(f"[HIGH] Quantity missing for '{c['name']}'; process emissions "
+                             f"from it cannot be calculated. Obtain store-issue records.")
             continue
+        if c.get("carbon_fraction") is None:
+            name = c["name"].lower()
+            c["carbon_fraction"] = next((v for k, v in CONSERVATIVE_CARBON.items() if k in name), 1.0)
+            if flags is not None:
+                flags.append(f"[HIGH] Carbon content not documented for '{c['name']}'. Conservative "
+                             f"default {c['carbon_fraction']:.0%} used, which may overstate emissions. "
+                             f"Obtain supplier or lab carbon analysis.")
         t = c["tonnes"] * c["carbon_fraction"] * CO2_PER_C
         total += t
         lines.append({"source": c["name"], "tCO2": round(t, 1)})
