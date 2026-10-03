@@ -138,11 +138,21 @@ if run_btn:
                                  "see_direct": supplier_see},
                 llm=llm, on_step=lambda s: st.write("✅ " + s))
             st.session_state["out"] = out
+            st.session_state.pop("live_error", None)
             status.update(label="Done: report ready", state="complete")
         except Exception as e:
-            status.update(label="A step failed", state="error")
-            st.error(f"{type(e).__name__}: {e}")
-            st.stop()
+            status.update(label="Live AI step failed: showing demo results instead", state="error")
+            st.session_state["live_error"] = f"{type(e).__name__}: {e}"
+            demo_docs = open(os.path.join(HERE, "sample_dossier_margalla_steel.md"),
+                             encoding="utf-8").read().split("## Expected findings")[0]
+            st.session_state["out"] = pipeline.run(
+                demo_docs, buyer_request=buyer_request,
+                supplier_whatif={"process": "Rolling Mill - Rebar",
+                                 "precursor": "Billets (purchased)", "see_direct": supplier_see},
+                llm=pipeline.mock_llm)
+    if "live_error" in st.session_state and mode != "mock":
+        with st.expander("⚠️ Live AI error details (for the developer)"):
+            st.code(st.session_state["live_error"])
 
 out = st.session_state.get("out")
 if not out:

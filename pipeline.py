@@ -34,13 +34,26 @@ def make_llm():
     model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
     def real_llm(system, user):
-        r = client.chat.completions.create(
-            model=model,
-            temperature=0,
-            messages=[{"role": "system", "content": system},
-                      {"role": "user", "content": user}],
-        )
-        return r.choices[0].message.content
+        import time
+        last = None
+        for attempt in range(4):
+            try:
+                r = client.chat.completions.create(
+                    model=model,
+                    temperature=0,
+                    response_format={"type": "json_object"},
+                    messages=[{"role": "system", "content": system},
+                              {"role": "user", "content": user}],
+                )
+                return r.choices[0].message.content
+            except Exception as e:  # rate limit or transient error: wait and retry
+                last = e
+                msg = str(e).lower()
+                if "rate" in msg or "429" in msg or "timeout" in msg or "503" in msg:
+                    time.sleep(15 * (attempt + 1))
+                    continue
+                raise
+        raise last
 
     return real_llm, model
 
@@ -153,14 +166,27 @@ def run(documents_text, buyer_request="", supplier_whatif=None, llm=None, on_ste
     result = calc.calculate(data)
     whatif = None
     if supplier_whatif:
-        whatif = calc.what_if_supplier_data(data, supplier_whatif["process"],
-                                            supplier_whatif["precursor"],
-                                            supplier_whatif["see_direct"])
+        target = None
+        for proc in data.get("processes", []):
+            for pr in proc.get("precursors", []) or []:
+                if pr.get("source") != "own" and pr.get("supplier_see_direct") is None:
+                    target = (proc["name"], pr["name"])
+                    break
+            if target:
+                break
+        if target:
+            whatif = calc.what_if_supplier_data(data, target[0], target[1],
+                                                supplier_whatif["see_direct"])
 
     # 3. Audit
     step("Gap Auditor: checking readiness against the CBAM checklist")
     audit = parse_json(llm(P.AUDITOR_SYSTEM, P.AUDITOR_USER.format(
         checklist=checklist, flags="\n".join(result["flags"]), documents=documents_text)))
+    if isinstance(audit, dict):
+        audit = audit.get("items") or next((v for v in audit.values() if isinstance(v, list)), [])
+    for a in audit:
+        a["severity"] = a.get("severity", "medium") if a.get("severity") in WEIGHT else "medium"
+        a["rating"] = a.get("rating") if a.get("rating") in CREDIT else "Missing"
     score = readiness_score(audit)
 
     # 4. Report

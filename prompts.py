@@ -59,7 +59,7 @@ RULES
 3. Calculator flags marked [HIGH] are confirmed problems: the related item cannot be "Met".
 4. For each item that is not "Met", give ONE concrete fix the plant can start this week.
 5. Keep "severity" exactly as given in the checklist.
-6. Output ONLY a JSON array. No prose, no markdown fences."""
+6. Output ONLY a JSON object of the form {"items": [...]}. No prose, no markdown fences."""
 
 AUDITOR_USER = """CHECKLIST:
 {checklist}
@@ -70,9 +70,9 @@ CALCULATOR FLAGS:
 DOCUMENTS:
 {documents}
 
-Return a JSON array with one object per checklist item, in checklist order:
-[{{"id": "...", "area": "...", "rating": "Met|Partial|Missing", "severity": "...",
-   "evidence": "document: \\"short quote\\" OR No evidence found", "fix": "... or null if Met"}}]"""
+Return a JSON object {{"items": [...]}} with one item per checklist entry, in checklist order:
+{{"items": [{{"id": "...", "area": "...", "rating": "Met|Partial|Missing", "severity": "...",
+   "evidence": "document: short quote OR No evidence found", "fix": "... or null if Met"}}]}}"""
 
 
 # ---------------------------------------------------------------------------

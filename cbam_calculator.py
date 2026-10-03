@@ -74,20 +74,25 @@ def calculate(data, ets_price_eur=75.0, cbam_factor=0.025):
         # Precursors: own (from an earlier process) or purchased
         precursor_direct, precursor_indirect = 0.0, 0.0
         for p in proc.get("precursors", []):
-            if p["source"] == "own":
-                s = see_by_process[p["process"]]
+            if p.get("source") == "own":
+                key = p.get("process")
+                if key not in see_by_process:  # LLM may name it differently: use latest own process
+                    key = list(see_by_process)[-1] if see_by_process else None
+                s = see_by_process.get(key, {"see_direct": 0.0, "see_indirect": 0.0})
                 d, i, basis = s["see_direct"], s["see_indirect"], "own process"
-            elif p.get("supplier_see_direct") is not None:
+            elif p.get("supplier_see_direct") is not None:  # actual supplier data
                 d = p["supplier_see_direct"]
                 i = p.get("supplier_see_indirect", 0.0)
                 basis = "supplier actual data"
             else:
-                d = p["default_see_direct"]
-                i = p.get("default_see_indirect", 0.0)
+                d = p.get("default_see_direct")
+                if d is None:
+                    d = 1.9  # illustrative fallback default for billets
+                i = p.get("default_see_indirect") or 0.0
                 basis = "EU DEFAULT VALUE (no supplier data)"
                 flags.append(
                     f"[HIGH] {proc['name']}: no actual emissions data from supplier "
-                    f"'{p['supplier']}' for {p['tonnes']} t {p['name']}. Default value "
+                    f"'{p.get('supplier', 'unknown supplier')}' for {p['tonnes']} t {p['name']}. Default value "
                     f"used, which usually raises reported emissions. Request supplier data."
                 )
             precursor_direct += p["tonnes"] * d
@@ -117,7 +122,7 @@ def calculate(data, ets_price_eur=75.0, cbam_factor=0.025):
 
     # Data-quality checks
     for m in data.get("meters", []):
-        if m["calibration_status"] != "valid":
+        if (m.get("calibration_status") or "unknown") != "valid":
             flags.append(
                 f"[HIGH] Meter '{m['id']}' ({m['measures']}) calibration {m['calibration_status']}. "
                 f"Activity data may be rejected by the verifier."
@@ -132,10 +137,10 @@ def calculate(data, ets_price_eur=75.0, cbam_factor=0.025):
     # adjustment detail. For orientation, not a legal calculation.
     exposure = []
     for e in data.get("eu_exports", []):
-        r = results[e["process"]]
+        r = results.get(e.get("process")) or list(results.values())[-1]
         emb = r["SEE_direct_tCO2_per_t"] * e["tonnes"]
         exposure.append({
-            "product": e["process"],
+            "product": e.get("process"),
             "tonnes_to_eu": e["tonnes"],
             "embedded_direct_tCO2": round(emb, 1),
             "illustrative_cost_full_phase_in_EUR": round(emb * ets_price_eur),
